@@ -1,0 +1,4 @@
+[package]
+name = "rustex"
+version = "0.1.0"
+authors = ["Eric Fulmer <EFulmer@gmail.com>"]
