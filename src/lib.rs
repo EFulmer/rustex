@@ -1,5 +1,3 @@
-use std::string::String;
-
 fn char_at(s: &str, i: usize) -> Option<char> {
     let res: Option<(usize, char)> = s.char_indices().find(|c| c.0 == i);
     match res {
@@ -70,26 +68,37 @@ fn match_re(regexp: &str, text: &str) -> bool {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::match_re;
 
-#[test]
-fn match_re_test() {
-    assert!(match_re("dinosaur", "dinosaur"), "\"dinosaur\" didn't match \"dinosaur\"");
-    assert!(match_re("dinosaur", "dinosaur"), "\"dinosaur\" didn't match \"dinosaur\"");
-}
-
-#[test]
-fn match_empty_re() {
-    assert!(match_re("", ""), "empty regex should've matched empty string");
-    assert!(match_re("", "rust"), "empty regex should've matched \"rust\"");
-}
-
-#[test]
-fn match_empty_string() {
-    assert_eq!(match_re("rust", ""), false);
-}
-
-#[test]
-fn match_dot_star() {
-    assert!(match_re(".*", ""), ".* should match empty string");
-    assert!(match_re(".*", "memes"), ".* should match \"memes\"");
+    #[test]
+    fn match_re_test() {
+        assert!(match_re("dinosaur", "dinosaur"), "\"dinosaur\" didn't match \"dinosaur\"");
+        assert!(match_re("dinosaur", "dinosaur"), "\"dinosaur\" didn't match \"dinosaur\"");
+    }
+    
+    #[test]
+    #[should_panic]
+    fn match_fail() {
+        assert!(match_re("dinosaur jr", "dinosaur"), 
+                "regex \"dinosaur jr\" matched \"dinosaur\" - should not happen");
+    }
+    
+    #[test]
+    fn match_empty_re() {
+        assert!(match_re("", ""), "empty regex should've matched empty string");
+        assert!(match_re("", "rust"), "empty regex should've matched \"rust\"");
+    }
+    
+    #[test]
+    fn match_empty_string() {
+        assert_eq!(match_re("rust", ""), false);
+    }
+    
+    #[test]
+    fn match_dot_star() {
+        assert!(match_re(".*", ""), ".* should match empty string");
+        assert!(match_re(".*", "memes"), ".* should match \"memes\"");
+    }
 }
