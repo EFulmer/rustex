@@ -1,5 +1,17 @@
 #![allow(dead_code)]
 
+#[derive(Debug)]
+enum RegexChar {
+    Char(char),
+    CharClass(Vec<char>),
+    Star,
+    Plus,
+    Question,
+    // could add repeated, groups, any char, ...
+}
+
+type RegexChars = Vec<RegexChar>;
+
 pub fn char_at(s: &str, i: usize) -> Option<char> {
     let res: Option<(usize, char)> = s.char_indices().find(|c| c.0 == i);
     match res {
@@ -46,7 +58,7 @@ pub fn match_re(regexp: &str, text: &str) -> bool {
     }
     else {
         if regexp.starts_with('^') {
-            match_here(regexp, text)
+            match_here(&regexp[1..], text)
         }
         else {
             let mut chars: &str = &text[0 .. ];
@@ -100,6 +112,13 @@ mod tests {
         assert!(match_re("a*", "aaa"), "\"a*\" should match \"aaa\"");
     }
 
+    #[test]
+    fn some_dict_stuff() {
+        assert!(match_re("^.a...x.$", "cachexy"), "\"^.a...x.$\" should match \"cachexy\"");
+        assert!(match_re("^.a...x.$", "carboxy"), "\"^.a...x.$\" should match \"carboxy\"");
+        assert!(match_re("^.a...x.$", "martext"), "\"^.a...x.$\" should match \"martext\"");
+        assert!(match_re("^.a...x.$", "panmixy"), "\"^.a...x.$\" should match \"panmixy\"");
+    }
     // Thank you, Jonny! :)
     // #[test]
     // fn match_email() {
