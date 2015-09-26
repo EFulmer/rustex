@@ -6,62 +6,84 @@ enum RegexChar {
     CharClass(Vec<char>),
     StartLine,
     EndLine,
+    AnyChar,
     AnyNumber(char),
     OnePlus(char),
     ZeroOrOne(char),
-    // could add repeated, groups, any char, ...
 }
 
-type RegexChars = Vec<RegexChar>;
+struct Regex(Vec<RegexChar>);
 
-fn str_to_re(regexp: &str) -> RegexChars {
-    let mut result = Vec::new();
-    let mut iter = regexp.char_indices().peekable();
-
-    loop {
-        if iter.peek().is_none() { 
-            break;
+impl Regex {
+    // TODO this needs cleaner error checking. 
+    // Also can possibly skip using peekable, or even char_indices
+    pub fn new(regexp: &str) -> Regex {
+        let mut result = Vec::new();
+        let mut iter = regexp.char_indices().peekable();
+    
+        loop {
+            if iter.peek().is_none() { break; }
+    
+            let (i, c) = iter.next().unwrap();
+    
+            match c {
+                '[' => {
+                    let next = iter.next();
+                    let mut chars = Vec::new();
+                    loop {
+                        if next.is_none() {
+                            panic!("found EOL in character class");
+                        }
+                        if next.unwrap().1 == ']' {
+                            break;
+                        }
+                        chars.push(next.unwrap().1);
+                    }
+                    result.push(RegexChar::CharClass(chars))
+                }
+                '\\' => {
+                    match iter.peek() {
+                        Some(t) => result.push(RegexChar::Char(t.1)),
+                        None => panic!("regex escape backslash found at EOL"),
+                    }
+                }
+                '^' => result.push(RegexChar::StartLine),
+                '$' => result.push(RegexChar::EndLine),
+                '.' => result.push(RegexChar::AnyChar),
+                '*' => {
+                    match result.pop().unwrap() {
+                        RegexChar::Char(c) => result.push(RegexChar::AnyNumber(c)),
+                        RegexChar::AnyChar => result.push(RegexChar::AnyChar),
+                        _ => panic!("expected character"), // could look nicer
+                    }
+                }
+                '+' => {
+                    match result.pop().unwrap() {
+                        RegexChar::Char(c) => result.push(RegexChar::OnePlus(c)),
+                        RegexChar::AnyChar => result.push(RegexChar::AnyChar),
+                        _ => panic!("expected character"),
+                    }
+                }
+                '?' => {
+                    match result.pop().unwrap() {
+                        RegexChar::Char(c) => result.push(RegexChar::ZeroOrOne(c)),
+                        RegexChar::AnyChar => result.push(RegexChar::AnyChar),
+                        _ => panic!("expected character"),
+                    }
+                }
+                c => result.push(RegexChar::Char(c)),
+            }
         }
-        let (i, c) = iter.next().unwrap();
-
-        // TODO add in a try, or maybe switch return type to Result
-        match c {
-            '[' => char_class(&regexp, &result, i),
-            '\\' => {
-                match iter.peek() {
-                    Some(t) => result.push(RegexChar::Char(t.1)),
-                    None => panic!("regex escape character at EOS"),
-                }
-            }
-            '^' => result.push(RegexChar::StartLine),
-            '$' => result.push(RegexChar::EndLine),
-            '*' => {
-                match result.pop().unwrap() {
-                    RegexChar::Char(c) => result.push(RegexChar::AnyNumber(c)),
-                    _ => panic!("expected character"), // could look nicer
-                }
-            }
-            '+' => {
-                match result.pop().unwrap() {
-                    RegexChar::Char(c) => result.push(RegexChar::OnePlus(c)),
-                    _ => panic!("expected character"),
-                }
-            }
-            '?' => {
-                match result.pop().unwrap() {
-                    RegexChar::Char(c) => result.push(RegexChar::ZeroOrOne(c)),
-                    _ => panic!("expected character"),
-                }
-            }
-            c => result.push(RegexChar::Char(c)),
-        }
+    
+        Regex(result)
     }
 
-    result
+    fn re_match(&self, s: &str) -> bool {
+        true
+    }
 }
 
-fn char_class(regexp: &str, result: &RegexChars, i: usize) {
-}
+
 pub fn char_at(s: &str, i: usize) -> Option<char> {
     let res: Option<(usize, char)> = s.char_indices().find(|c| c.0 == i);
     match res {
