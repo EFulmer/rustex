@@ -4,4 +4,3 @@
 - Character classes.
 - Implementing ?.
 - Implementing +.
-- Implementing ^.
